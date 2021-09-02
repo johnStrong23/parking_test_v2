@@ -1,9 +1,12 @@
 pyyaml==5.1
+--find-links https://download.pytorch.org/whl/torch_stable.html
 torch==1.8.0+cu101
+--find-links https://download.pytorch.org/whl/torch_stable.html
 torchvision==0.9.0+cu101
+--find-links https://dl.fbaipublicfiles.com/detectron2/wheels/cu101/torch1.8/index.html
 detectron2
 scikit-image
-python-opencv
+opencv-python
 matplotlib
 numpy
 scipy
