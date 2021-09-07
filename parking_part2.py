@@ -53,6 +53,11 @@ os.system('rm - f {OUTPUT_FRAMES_PATH} / masked *')
 os.system('rm - f {OUTPUT_FRAMES_PATH} / diff_ *.png')
 
 """# ***The IMAGE-DIFF Code***"""
+MAIN_FOLDER = './inputs'
+VIDEOS_FOLDER = MAIN_FOLDER + '/Videos'
+OUTPUT_FRAMES_PATH = VIDEOS_FOLDER + '/frames'
+one_frame_each = 24
+
 
 img_0 = cv2.imread(OUTPUT_FRAMES_PATH + '/frame0.png')
 img_1 = cv2.imread(OUTPUT_FRAMES_PATH + '/frame' + str(one_frame_each) + '.png')
@@ -194,12 +199,11 @@ def detect_parking_slot(bbox_car, centroid=None):
             row_num = parking_row
             slot_num = parking_slot_at_row
 
-    return (row_num, slot_num, dist_bbox_slot)
+    return row_num, slot_num, dist_bbox_slot
 
 
-#
 # Function with inputs two arrays with {Labels, BBoxes}
-# Send for Processing Each .... Instance {One-Lable, One-BBox}
+# Send for Processing Each .... Instance {One-Label, One-BBox}
 #
 def locate_instances(labels_arr, bboxes_arr):
     lines_arr = []
@@ -209,22 +213,21 @@ def locate_instances(labels_arr, bboxes_arr):
     for i in range(len(labels_arr)):
         label = labels_arr[i]
 
-        # if 'car' in label:
+        if 'car' in label:
+            bbox_obj = bboxes_arr[i]
 
-        bbox_obj = bboxes_arr[i]
+            # print( bbox_car.__class__ )  --> ndarray
+            # print( bbox_car ) --> [317.80377   59.471947 438.29037  113.94816 ]
 
-        # print( bbox_car.__class__ )  --> ndarray
-        # print( bbox_car ) --> [317.80377   59.471947 438.29037  113.94816 ]
+            row_num, slot_num, dist = detect_parking_slot(bbox_obj)
 
-        row_num, slot_num, dist = detect_parking_slot(bbox_obj)
+            print("Found Car in Parking Space --> Row = %d :: Slot = %d" % (row_num, slot_num))
 
-        print("Found Car in Parking Space --> Row = %d :: Slot = %d" % (row_num, slot_num))
+            lines_arr.append(row_num)
+            slots_arr.append(slot_num)
+            dists_arr.append(dist)
 
-        lines_arr.append(row_num)
-        slots_arr.append(slot_num)
-        dists_arr.append(dist)
-
-    return (lines_arr, slots_arr, dists_arr)
+    return lines_arr, slots_arr, dists_arr
 
 
 """# ***Parking-Frame*** Apply Object Detector / Frame
@@ -279,7 +282,7 @@ def process_parking_frame(frame_fname):
     v = Visualizer(img[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)
 
     # for instance in outputs["instances]:
-    #  print(instance)
+    # print(instance)
 
     out = v.draw_instance_predictions(outputs["instances"].to("cpu"))
 
