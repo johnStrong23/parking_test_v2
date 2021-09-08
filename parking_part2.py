@@ -33,8 +33,8 @@ cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rc
 cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.90
 cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
 cfg.MODEL.NMS_THRESH_TEST = 0.90
+cfg.MODEL.DEVICE = "cpu"
 
-# cfg.MODEL.DEVICE = "cpu"
 # *****************************
 # The Trained Predictor at COCO
 # *****************************
@@ -49,15 +49,14 @@ print('Finished with Mask-RCNN Model Preparation -- Ready for Predictions !' + "
 Clean up frames folder: Remove old MAKSED_ files
 """
 
-os.system('rm - f {OUTPUT_FRAMES_PATH} / masked *')
-os.system('rm - f {OUTPUT_FRAMES_PATH} / diff_ *.png')
-
 """# ***The IMAGE-DIFF Code***"""
 MAIN_FOLDER = './inputs'
-VIDEOS_FOLDER = MAIN_FOLDER + '/Videos'
-OUTPUT_FRAMES_PATH = VIDEOS_FOLDER + '/frames'
+# VIDEOS_FOLDER = MAIN_FOLDER + '/Videos'
+OUTPUT_FRAMES_PATH = MAIN_FOLDER + '/frames'
 one_frame_each = 24
 
+# os.system('rm - f {OUTPUT_FRAMES_PATH} / masked *')
+os.system('rm - f {OUTPUT_FRAMES_PATH} / diff_ *.png')
 
 img_0 = cv2.imread(OUTPUT_FRAMES_PATH + '/frame0.png')
 img_1 = cv2.imread(OUTPUT_FRAMES_PATH + '/frame' + str(one_frame_each) + '.png')
@@ -90,7 +89,8 @@ while True:
     previous = img
     counter += one_frame_each
 
-os.system('cp / content / parking - space / Videos / frames / diff_ *.png / content / drive / MyDrive / ML - apps / parking - space - monitoring / Videos / frames /')
+os.system('cp / content / parking - space / Videos / frames / diff_ *.png / content / drive / MyDrive / ML - apps / '
+          'parking - space - monitoring / Videos / frames /')
 
 """Define a function that is responsible for model application ... **Per Frame**
 # **Section MASK-RCNN Application to Low-Freq Frames**
@@ -310,14 +310,14 @@ def process_parking_frame(frame_fname):
 Always check the value of OUTPUT-FRAMES-PATH !
 """
 
-OUTPUT_FRAMES_PATH = 'parking-space/Videos/frames'
+OUTPUT_FRAMES_PATH = 'inputs/frames'
 
 os.system('rm {OUTPUT_FRAMES_PATH} / masked *.png')
 
 
 # Extracted parking-space frames
-# all_frames = os.system('ls {OUTPUT_FRAMES_PATH} / *.png')
-all_frames = ['/content/parking-space/Videos/frames/diff_0_24.png']
+all_frames = os.listdir(OUTPUT_FRAMES_PATH + ' / *.png')
+# all_frames = ['/content/parking-space/Videos/frames/diff_0_24.png']
 
 if "cannot access" in all_frames[0]:
     # Problem with frames listing - Aborting !
@@ -326,11 +326,9 @@ if "cannot access" in all_frames[0]:
 video_lab = []
 
 # Start reading each frame and process it
-for frame_xx in all_frames:
-    # print(frame_xx)
-
-    # *************    Detect objects in frame_XX    ******************
-    frame_num, curr_bboxes_arr, curr_classes_arr, lines, slots, dists = process_parking_frame(frame_xx)
+for frame in all_frames:
+    # *************    Detect objects in frame    ******************
+    frame_num, curr_bboxes_arr, curr_classes_arr, lines, slots, dists = process_parking_frame(frame)
     # *****************************************************************
 
     frame_dict = {'frame-number': frame_num}
@@ -351,7 +349,7 @@ for frame_xx in all_frames:
 
     video_lab.append(frame_dict)
 
-os.system('ls {OUTPUT_FRAMES_PATH} / *.png')
+# os.system('ls {OUTPUT_FRAMES_PATH} / *.png')
 
 """# **LOCALIZATION AND TRACKING CODE**
 Found New Car Entering the Parking Space & Follow It
@@ -367,16 +365,16 @@ CAR_SLOT_DISTANCE_THRESHOLD = 100
 
 CAR_class_index = 2
 PERSON_class_index = 0
-BACKPACK_class_index = 25
-
-FRAME_0 = 1080
-FRAME_1 = 1088
-FRAME_2 = 1096
-FRAME_3 = 1104
-FRAME_4 = 1112
-FRAME_5 = 1120
-FRAME_6 = 1128
-FRAME_7 = 1136
+# BACKPACK_class_index = 25
+#
+# FRAME_0 = 1080
+# FRAME_1 = 1088
+# FRAME_2 = 1096
+# FRAME_3 = 1104
+# FRAME_4 = 1112
+# FRAME_5 = 1120
+# FRAME_6 = 1128
+# FRAME_7 = 1136
 
 KEEP_LAST_POS = 10
 
@@ -387,8 +385,6 @@ dim_2 = 5  # Features / Object
 
 history = torch.zeros(KEEP_LAST_POS, dim_1, dim_2)
 
-
-# print( history )
 
 def frame_close_inspection_torch(frame_num):
     frame_num = int(frame_num)
@@ -447,28 +443,28 @@ def frame_close_inspection_torch(frame_num):
 # frame_close_inspection_torch(1132)
 # frame_close_inspection_torch(1134)
 
-def is_parking_slot_too_distant(category, dist):
-    if category is 2 and dist > CAR_SLOT_DISTANCE_THRESHOLD:
-        # It is a car and it is NOT close to a parking slot ( DIST > THRESH )
-        return True
-
-    # Car-Slot Distance < THRESH
-    return False
-
-
-def find_closest_objects(my_instance, all_bboxes):
-    for bbx in all_bboxes:
-        compute_distance_between_two_rectangles(bbx, my_instance)
-
-    return
-
-
-def is_slot_between_two_reserved():
-    return
-
-
-def find_previous_state_of_instance():
-    return
+# def is_parking_slot_too_distant(category, dist):
+#     if category is 2 and dist > CAR_SLOT_DISTANCE_THRESHOLD:
+#         # It is a car and it is NOT close to a parking slot ( DIST > THRESH )
+#         return True
+#
+#     # Car-Slot Distance < THRESH
+#     return False
+#
+#
+# def find_closest_objects(my_instance, all_bboxes):
+#     for bbx in all_bboxes:
+#         compute_distance_between_two_rectangles(bbx, my_instance)
+#
+#     return
+#
+#
+# def is_slot_between_two_reserved():
+#     return
+#
+#
+# def find_previous_state_of_instance():
+#     return
 
 
 # ***************************
