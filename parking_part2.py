@@ -56,41 +56,41 @@ OUTPUT_FRAMES_PATH = MAIN_FOLDER + '/frames'
 one_frame_each = 24
 
 # os.system('rm - f {OUTPUT_FRAMES_PATH} / masked *')
-os.system('rm - f {OUTPUT_FRAMES_PATH} / diff_ *.png')
+# os.system('rm -f {OUTPUT_FRAMES_PATH}/diff_*.png')
 
-img_0 = cv2.imread(OUTPUT_FRAMES_PATH + '/frame0.png')
-img_1 = cv2.imread(OUTPUT_FRAMES_PATH + '/frame' + str(one_frame_each) + '.png')
-# Frame Difference
-frame_diff = cv2.absdiff(img_1, img_0)
-cv2.imwrite(OUTPUT_FRAMES_PATH + '/diff_0_' + str(one_frame_each) + '.png', frame_diff)
+# img_0 = cv2.imread(OUTPUT_FRAMES_PATH + '/frame0.png')
+# img_1 = cv2.imread(OUTPUT_FRAMES_PATH + '/frame' + str(one_frame_each) + '.png')
+# # Frame Difference
+# frame_diff = cv2.absdiff(img_1, img_0)
+# cv2.imwrite(OUTPUT_FRAMES_PATH + '/diff_0_' + str(one_frame_each) + '.png', frame_diff)
+#
+# previous = img_1
+# counter = 2 * one_frame_each
+#
+# while True:
+#     frame_fname = OUTPUT_FRAMES_PATH + '/frame' + str(counter) + '.png'
+#
+#     img = cv2.imread(frame_fname)
+#
+#     if img is None:
+#         # Couldn't Read Image
+#         print('Could Not Read Frame ... %s !' % frame_fname)
+#         break
+#
+#     # Frame Difference
+#     frame_diff = cv2.absdiff(img, previous)
+#
+#     bname = '/diff_' + str(counter - one_frame_each) + '_' + str(counter) + '.png'
+#     full_bname = OUTPUT_FRAMES_PATH + bname
+#     # print(full_bname)
+#
+#     cv2.imwrite(full_bname, frame_diff)
+#
+#     previous = img
+#     counter += one_frame_each
 
-previous = img_1
-counter = 2 * one_frame_each
-
-while True:
-    frame_fname = OUTPUT_FRAMES_PATH + '/frame' + str(counter) + '.png'
-
-    img = cv2.imread(frame_fname)
-
-    if img is None:
-        # Couldn't Read Image
-        print('Could Not Read Frame ... %s !' % frame_fname)
-        break
-
-    # Frame Difference
-    frame_diff = cv2.absdiff(img, previous)
-
-    bname = '/diff_' + str(counter - one_frame_each) + '_' + str(counter) + '.png'
-    full_bname = OUTPUT_FRAMES_PATH + bname
-    # print(full_bname)
-
-    cv2.imwrite(full_bname, frame_diff)
-
-    previous = img
-    counter += one_frame_each
-
-os.system('cp / content / parking - space / Videos / frames / diff_ *.png / content / drive / MyDrive / ML - apps / '
-          'parking - space - monitoring / Videos / frames /')
+# os.system('cp / content / parking - space / Videos / frames / diff_ *.png / content / drive / MyDrive / ML - apps / '
+#           'parking - space - monitoring / Videos / frames /')
 
 """Define a function that is responsible for model application ... **Per Frame**
 # **Section MASK-RCNN Application to Low-Freq Frames**
@@ -137,7 +137,7 @@ def detect_parking_slot(bbox_car, centroid=None):
     row_num = 0
     slot_num = 0
 
-    for pslot in all_parking_slots:
+    for pslot in 11:
         parking_row = int(pslot[0])
         parking_slot_at_row = int(pslot[1])
 
@@ -266,6 +266,9 @@ def process_parking_frame(frame_fname):
     for i in outputs_pred_classes.__iter__():
         class_index = i.cpu().numpy()
         my_class_name = class_names[class_index]
+        if class_index not in [2, 3, 5, 6, 7]:
+            print('Non-Vehicle Object detected in the Highway')
+            break
         # print('--> %d ... %s' % (i, my_class_name))
         classes_arr.append(my_class_name)
 
@@ -312,7 +315,7 @@ Always check the value of OUTPUT-FRAMES-PATH !
 
 OUTPUT_FRAMES_PATH = 'inputs/frames'
 
-os.system('rm {OUTPUT_FRAMES_PATH} / masked *.png')
+os.system('rm -f {OUTPUT_FRAMES_PATH}/masked*.png')
 
 
 # Extracted parking-space frames
@@ -355,8 +358,6 @@ for frame in all_frames:
 Found New Car Entering the Parking Space & Follow It
 Utility Function: Compute distance between two rectangles
 """
-
-#all_parking_slots
 
 """# WRITE CODE **HERE**"""
 
@@ -471,6 +472,7 @@ def frame_close_inspection_torch(frame_num):
 # CORRECT PARKING PREDICTIONS
 # ***************************
 def correct_parking_slot_predictions():
+
     CAR_INDEX = 2
 
     # Start Reading Video Predictions History
@@ -993,7 +995,7 @@ correct_occlusions()
 
 CAR_class_index = 2
 PERSON_class_index = 0
-BACKPACK_class_index = 25
+# BACKPACK_class_index = 25
 
 FRAME_0 = 1080
 FRAME_1 = 1088
@@ -1016,7 +1018,7 @@ history = torch.zeros(KEEP_LAST_POS, dim_1, dim_2)
 #  Car is Approaching Not Visible Yet
 #    Reading Frame-1056
 # *************************************
-img = cv2.imread("parking-space/Videos/frames/frame" + str(FRAME_0) + ".png")
+img = cv2.imread("inputs/frames/frame" + str(FRAME_0) + ".png")
 outputs = predictor(img)
 
 # *** BOUNDING-BOXES ***
@@ -1084,7 +1086,7 @@ car_labels = output_pred_classes == CAR_class_index
 person_labels = output_pred_classes == PERSON_class_index
 
 # How many detected objects are .... BACKPACK ?
-backpack_labels = output_pred_classes == BACKPACK_class_index
+# backpack_labels = output_pred_classes == BACKPACK_class_index
 
 # Convert from tensor --> "np.ndarray" --> python-list
 # print( car_labels[0].__class__ )
@@ -1095,12 +1097,12 @@ num_cars = car_labels.count(True)
 person_labels = person_labels.numpy().tolist()
 num_people = person_labels.count(True)
 
-backpack_labels = backpack_labels.numpy().tolist()
-num_backpacks = backpack_labels.count(True)
+# backpack_labels = backpack_labels.numpy().tolist()
+# num_backpacks = backpack_labels.count(True)
 
 print("How Many Cars Found = %d" % num_cars)
 print("How Many People Found = %d" % num_people)
-print("How Many Backpack Found = %d" % num_backpacks)
+# print("How Many Backpack Found = %d" % num_backpacks)
 
 # HISTORY
 # Store Objects of Current Frame to History
@@ -1126,7 +1128,7 @@ previous_frame_bboxes = output_pred_boxes
 previous_num_labels = num_labels
 previous_num_cars = num_cars
 previous_num_people = num_people
-previous_num_backpacks = num_backpacks
+# previous_num_backpacks = num_backpacks
 
 # !!!! Exmples of Basic Operations in Detectron2-Structures
 # !!!! Instances, Boxes
@@ -1200,14 +1202,14 @@ if num_people > previous_num_people:
     print('Number of New People in Parking Space = %d' % diff_people)
 
 # How many backpacks ?
-backpack_labels = pred_classes == BACKPACK_class_index
-backpack_labels = backpack_labels.numpy().tolist()
-num_backpacks = backpack_labels.count(True)
+# backpack_labels = pred_classes == BACKPACK_class_index
+# backpack_labels = backpack_labels.numpy().tolist()
+# num_backpacks = backpack_labels.count(True)
 
-if num_backpacks > previous_num_backpacks:
-    # New Backpacks Found !
-    diff_backpacks = num_backpacks - previous_num_backpacks
-    print('Number of New Backpacks in Parking Space = %d' % diff_backpacks)
+# if num_backpacks > previous_num_backpacks:
+#     # New Backpacks Found !
+#     diff_backpacks = num_backpacks - previous_num_backpacks
+#     print('Number of New Backpacks in Parking Space = %d' % diff_backpacks)
 
 # Find New Object ..
 #  Compare Bounding Boxes
@@ -1625,7 +1627,7 @@ instance_3 = outputs['instances'][3]
 bboxes_3 = instance_3[0].get('pred_boxes')
 print(bboxes_3)
 
-img = cv2.imread(videofile)
+img = cv2.imread(video_file)
 
 image = cv2.circle(img, (114, 162), radius=3, color=(255, 0, 255), thickness=-1)
 # image = cv2.circle(image, (222,  90), radius=3, color=(0,255,255), thickness=-1)
