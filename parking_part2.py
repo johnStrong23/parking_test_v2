@@ -122,9 +122,11 @@ def detect_parking_slot(bbox_car, centroid=None):
         bbox_car_x_median = centroid[0]
         bbox_car_y_median = centroid[1]
     else:
+        # TOP LEFT COORDS
         bbox_car_tl_x = int(bbox_car[0])
         bbox_car_tl_y = int(bbox_car[1])
 
+        # LOW RIGHT COORDS
         bbox_car_lr_x = int(bbox_car[2])
         bbox_car_lr_y = int(bbox_car[3])
 
@@ -137,11 +139,11 @@ def detect_parking_slot(bbox_car, centroid=None):
     row_num = 0
     slot_num = 0
 
-    for pslot in 11:
-        parking_row = int(pslot[0])
-        parking_slot_at_row = int(pslot[1])
+    for lane in lanes:  # WILL HAVE TO CHANGE TO LANES
+        driving_lane = int(lane[0])
+        parking_slot_at_row = int(lane[1])
 
-        slot_corner_1 = pslot[2]
+        slot_corner_1 = lane[2]
         if 'None' not in slot_corner_1:
             sc_1 = slot_corner_1.split('-')
             # print("sc_1 = " + " , ".join(sc_1))
@@ -152,7 +154,7 @@ def detect_parking_slot(bbox_car, centroid=None):
             sc01_x = 0
             sc01_y = 0
 
-        slot_corner_2 = pslot[3]
+        slot_corner_2 = lane[3]
         if 'None' not in slot_corner_2:
             sc_2 = slot_corner_2.split('-')
             # print("sc_2 = " + " , ".join(sc_2))
@@ -163,7 +165,7 @@ def detect_parking_slot(bbox_car, centroid=None):
             sc02_x = 0
             sc02_y = 0
 
-        slot_corner_3 = pslot[4]
+        slot_corner_3 = lane[4]
         if 'None' not in slot_corner_3:
             sc_3 = slot_corner_3.split('-')
             # print("sc_3 = " + " , ".join(sc_3))
@@ -174,7 +176,7 @@ def detect_parking_slot(bbox_car, centroid=None):
             sc03_x = 0
             sc03_y = 0
 
-        slot_corner_4 = pslot[5]
+        slot_corner_4 = lane[5]
         if 'None' not in slot_corner_4:
             sc_4 = slot_corner_4.split('-')
             # print("sc_4 = " + " , ".join(sc_4))
@@ -196,7 +198,7 @@ def detect_parking_slot(bbox_car, centroid=None):
         if dist_bbox_slot_c < dist_bbox_slot:
             dist_bbox_slot = dist_bbox_slot_c
 
-            row_num = parking_row
+            row_num = driving_lane
             slot_num = parking_slot_at_row
 
     return row_num, slot_num, dist_bbox_slot
@@ -210,11 +212,13 @@ def locate_instances(labels_arr, bboxes_arr):
     slots_arr = []
     dists_arr = []
 
+    vehicles_num = 0
     for i in range(len(labels_arr)):
         label = labels_arr[i]
 
-        if 'car' in label:
+        if label in ['car', 'motorcycle', 'bus', 'bike', 'truck']:
             bbox_obj = bboxes_arr[i]
+            vehicles_num += 1
 
             # print( bbox_car.__class__ )  --> ndarray
             # print( bbox_car ) --> [317.80377   59.471947 438.29037  113.94816 ]
@@ -227,7 +231,7 @@ def locate_instances(labels_arr, bboxes_arr):
             slots_arr.append(slot_num)
             dists_arr.append(dist)
 
-    return lines_arr, slots_arr, dists_arr
+    return lines_arr, vehicles_num, dists_arr
 
 
 """# ***Parking-Frame*** Apply Object Detector / Frame
@@ -251,33 +255,36 @@ def process_parking_frame(frame_fname):
     # ---------------------------------------------------------------
     outputs_pred_boxes = outputs["instances"].pred_boxes
     num_boxes = len(outputs_pred_boxes)
-    print("Number of INTERESTING objects found in '%s' = %d" % (frame_fname, num_boxes))
+    # print("Number of INTERESTING objects found in '%s' = %d" % (frame_fname, num_boxes))
 
     bboxes_arr = []
     for i in outputs_pred_boxes.__iter__():
         bbox_i = i.cpu().numpy()
-        # For Each Object an Array --> [x_left_up , y_left_up , x_right_down , y_right_down]
+        # For Each Object an Array --> [x_left_up, y_left_up, x_right_down, y_right_down]
         bboxes_arr.append(bbox_i)
 
     # Information #02 --> Labels of interesting objects
     outputs_pred_classes = outputs["instances"].pred_classes
 
     classes_arr = []
+    vehicles_num = 0
     for i in outputs_pred_classes.__iter__():
         class_index = i.cpu().numpy()
         my_class_name = class_names[class_index]
         if class_index not in [2, 3, 5, 6, 7]:
-            print('Non-Vehicle Object detected in the Highway')
+            print('Non-Vehicle Object detected in the Highway')  # FIRST EXCEPTION POINT
             break
+        else:
+            vehicles_num += 1
         # print('--> %d ... %s' % (i, my_class_name))
         classes_arr.append(my_class_name)
 
     # Print labels of all contained objects
-    classes_str = " , ".join(classes_arr)
+    # classes_str = " , ".join(classes_arr)
     # print(classes_str) --> car , car , car , car
 
     ### !!! LOCATE THE PARKING SLOT
-    lines, slots, dists = locate_instances(classes_arr, bboxes_arr)
+    lines, vehicles_num, dists = locate_instances(classes_arr, bboxes_arr)
     ### !!! Found Parking Slot !!! ##
 
     # Draw predictions in input image
@@ -306,7 +313,7 @@ def process_parking_frame(frame_fname):
     plt.imsave(my_masked_filename, tmp, cmap=plt.cm.gray)
 
     frame_num = int(my_basename.split('frame')[1])
-    return (frame_num, bboxes_arr, outputs_pred_classes.cpu().numpy(), lines, slots, dists)
+    return frame_num, bboxes_arr, outputs_pred_classes.cpu().numpy(), lines, vehicles_num, dists
 
 
 """# **MIND THE GAP** : The Image-Folder Reader ... 
